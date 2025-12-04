@@ -18,8 +18,8 @@ suspend fun runMany(
     }
 
 suspend fun main() {
-    val n = 5
-    val result = runMany(10, 100000000, n, OptimalFarmerFactory(n), RandomFoxFactory())
+    val n = 8
+    val result = runMany(10, 10000000, n, OptimalFarmerFactory(n), RandomWithStayFoxFactory(n))
     println(result)
 }
 
@@ -41,17 +41,7 @@ fun runSim(
         var i = 1
         while (true) {
             // Move fox
-            if (foxPos == 1) {
-                foxPos++
-            } else if (foxPos == n) {
-                foxPos--
-            } else {
-                if (fox.leftOrRight()) {
-                    foxPos++
-                } else {
-                    foxPos--
-                }
-            }
+            foxPos = fox.next(foxPos)
 
             // Farmer selects
             val selection = farmer.next()
@@ -68,24 +58,22 @@ fun runSim(
     return totalDays.toDouble() / iterations
 }
 
-abstract class FarmerFactory (
+abstract class FarmerFactory(
     protected val n: Int,
 ) {
     abstract fun buildFarmer(): Farmer
 }
 
-class RandomFarmerFactory (
+class RandomFarmerFactory(
     n: Int,
 ) : FarmerFactory(n) {
-    override fun buildFarmer(): Farmer =
-        RandomFarmer(n)
+    override fun buildFarmer(): Farmer = RandomFarmer(n)
 }
 
-class OptimalFarmerFactory (
+class OptimalFarmerFactory(
     n: Int,
-): FarmerFactory(n) {
-    override fun buildFarmer(): Farmer =
-        OptimalFarmer(n)
+) : FarmerFactory(n) {
+    override fun buildFarmer(): Farmer = OptimalFarmer(n)
 }
 
 abstract class Farmer(
@@ -99,34 +87,84 @@ class RandomFarmer(
 ) : Farmer(n) {
     private val random = kotlin.random.Random
 
-    override fun next(): Int = random.nextInt(1, n+1)
+    override fun next(): Int = random.nextInt(1, n + 1)
 }
 
-class OptimalFarmer(n: Int) : Farmer(n) {
+class OptimalFarmer(
+    n: Int,
+) : Farmer(n) {
     private var index = 0
-    private var strategy = (2..n-1) + (n-1 downTo 2)
+    private var strategy = (2..n - 1) + (n - 1 downTo 2)
 
     override fun next(): Int {
-        return strategy[index++]
+        val takeIndex = index
+        index = (index + 1) % (n * 2 - 4)
+        return strategy[takeIndex]
     }
 }
 
-abstract class FoxFactory() {
+abstract class FoxFactory(
+    protected val n: Int,
+) {
     abstract fun buildFox(): Fox
 }
 
-class RandomFoxFactory : FoxFactory() {
-    override fun buildFox(): Fox =
-        RandomFox()
+class RandomFoxFactory(
+    n: Int,
+) : FoxFactory(n) {
+    override fun buildFox(): Fox = RandomFox(n)
 }
 
-abstract class Fox {
-    // left == false, right == true
-    abstract fun leftOrRight(): Boolean
+class RandomWithStayFoxFactory(
+    n: Int,
+) : FoxFactory(n) {
+    override fun buildFox(): Fox = RandomWithStayFox(n)
 }
 
-class RandomFox : Fox() {
+abstract class Fox(
+    protected val n: Int,
+) {
+    abstract fun next(pos: Int): Int
+}
+
+class RandomFox(
+    n: Int,
+) : Fox(n) {
     private val random = kotlin.random.Random
 
-    override fun leftOrRight(): Boolean = random.nextBoolean()
+    override fun next(pos: Int): Int =
+        if (pos == 1) {
+            pos + 1
+        } else if (pos == n) {
+            pos - 1
+        } else {
+            if (random.nextBoolean()) {
+                pos + 1
+            } else {
+                pos - 1
+            }
+        }
+}
+
+class RandomWithStayFox(
+    n: Int,
+) : Fox(n) {
+    private val random = kotlin.random.Random
+
+    override fun next(pos: Int): Int =
+        if (pos == 1) {
+            if (random.nextBoolean()) {
+                pos
+            } else {
+                pos + 1
+            }
+        } else if (pos == n) {
+            if (random.nextBoolean()) {
+                pos
+            } else {
+                pos - 1
+            }
+        } else {
+            pos + random.nextInt(-1, 2)
+        }
 }
