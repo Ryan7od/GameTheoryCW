@@ -6,28 +6,28 @@ suspend fun runMany(
     num: Int,
     iterations: Int,
     n: Int,
-    farmer: Farmer,
-    fox: Fox,
+    farmerFactory: FarmerFactory,
+    foxFactory: FoxFactory,
 ): Double =
     coroutineScope {
         val jobs =
             List(num) {
-                async(Dispatchers.Default) { runSim(iterations, n, farmer, fox) }
+                async(Dispatchers.Default) { runSim(iterations, n, farmerFactory, foxFactory) }
             }
         jobs.sumOf { it.await() } / num
     }
 
 suspend fun main() {
-    val n = 15
-    val result = runMany(1, 1, n, RandomFarmer(n), RandomFox())
+    val n = 5
+    val result = runMany(10, 100000000, n, OptimalFarmerFactory(n), RandomFoxFactory())
     println(result)
 }
 
 fun runSim(
     iterations: Int,
     n: Int,
-    farmer: Farmer,
-    fox: Fox,
+    farmerFactory: FarmerFactory,
+    foxFactory: FoxFactory,
 ): Double {
     val random = kotlin.random.Random
     var totalDays = 0
@@ -35,8 +35,11 @@ fun runSim(
     repeat(iterations) {
         var count = 0
         var foxPos = random.nextInt(1, n)
+        val farmer = farmerFactory.buildFarmer()
+        val fox = foxFactory.buildFox()
 
-        for (i in 1..10000) {
+        var i = 1
+        while (true) {
             // Move fox
             if (foxPos == 1) {
                 foxPos++
@@ -58,10 +61,31 @@ fun runSim(
                 totalDays += i
                 break
             }
+            i++
         }
     }
 
     return totalDays.toDouble() / iterations
+}
+
+abstract class FarmerFactory (
+    protected val n: Int,
+) {
+    abstract fun buildFarmer(): Farmer
+}
+
+class RandomFarmerFactory (
+    n: Int,
+) : FarmerFactory(n) {
+    override fun buildFarmer(): Farmer =
+        RandomFarmer(n)
+}
+
+class OptimalFarmerFactory (
+    n: Int,
+): FarmerFactory(n) {
+    override fun buildFarmer(): Farmer =
+        OptimalFarmer(n)
 }
 
 abstract class Farmer(
@@ -75,16 +99,25 @@ class RandomFarmer(
 ) : Farmer(n) {
     private val random = kotlin.random.Random
 
-    override fun next(): Int = random.nextInt(1, n)
+    override fun next(): Int = random.nextInt(1, n+1)
 }
 
-class Optimal5Farmer : Farmer(5) {
-    private var index = -1
+class OptimalFarmer(n: Int) : Farmer(n) {
+    private var index = 0
+    private var strategy = (2..n-1) + (n-1 downTo 2)
 
     override fun next(): Int {
-        index = (index + 1) % (n - 2)
-        return index + 2
+        return strategy[index++]
     }
+}
+
+abstract class FoxFactory() {
+    abstract fun buildFox(): Fox
+}
+
+class RandomFoxFactory : FoxFactory() {
+    override fun buildFox(): Fox =
+        RandomFox()
 }
 
 abstract class Fox {
