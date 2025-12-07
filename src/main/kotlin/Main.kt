@@ -17,18 +17,20 @@ suspend fun runMany(
         jobs.sumOf { it.await() } / num
     }
 
-fun main() = runBlocking {
-    for (n in 5..15) {
-        val result = runMany(
-            10,
-            10000000,
-            n,
-            OptimalFarmerFactory(n),
-            RandomFoxFactory(n)
-        )
-        println("$n: $result")
+fun main() =
+    runBlocking {
+        for (n in 5..15) {
+            val result =
+                runMany(
+                    10,
+                    10000000,
+                    n,
+                    OptimalFarmerFactory(n),
+                    RandomFoxFactory(n),
+                )
+            println("$n: $result")
+        }
     }
-}
 
 fun runSim(
     iterations: Int,
@@ -36,11 +38,9 @@ fun runSim(
     farmerFactory: FarmerFactory,
     foxFactory: FoxFactory,
 ): Double {
-    val random = kotlin.random.Random
     var totalDays = 0
 
     repeat(iterations) {
-        var count = 0
         var foxPos = -1
         val farmer = farmerFactory.buildFarmer()
         val fox = foxFactory.buildFox()
@@ -142,7 +142,7 @@ class RandomFox(
     override fun next(pos: Int): Int =
         // Initialisation
         if (pos == -1) {
-            random.nextInt(1, n+1)
+            random.nextInt(1, n + 1)
         } else if (pos == 1) {
             pos + 1
         } else if (pos == n) {
@@ -164,7 +164,7 @@ class RandomWithStayFox(
     override fun next(pos: Int): Int =
         // Initialisation
         if (pos == -1) {
-            random.nextInt(1, n+1)
+            random.nextInt(1, n + 1)
         } else if (pos == 1) {
             if (random.nextBoolean()) {
                 pos
