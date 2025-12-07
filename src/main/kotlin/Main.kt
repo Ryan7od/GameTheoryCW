@@ -18,9 +18,16 @@ suspend fun runMany(
     }
 
 fun main() = runBlocking {
-    val n = 8
-    val result = runMany(10, 10000000, n, OptimalFarmerFactory(n), RandomWithStayFoxFactory(n))
-    println(result)
+    for (n in 5..15) {
+        val result = runMany(
+            10,
+            10000000,
+            n,
+            OptimalFarmerFactory(n),
+            RandomFoxFactory(n)
+        )
+        println("$n: $result")
+    }
 }
 
 fun runSim(
@@ -34,7 +41,7 @@ fun runSim(
 
     repeat(iterations) {
         var count = 0
-        var foxPos = random.nextInt(1, n)
+        var foxPos = -1
         val farmer = farmerFactory.buildFarmer()
         val fox = foxFactory.buildFox()
 
@@ -133,7 +140,10 @@ class RandomFox(
     private val random = kotlin.random.Random
 
     override fun next(pos: Int): Int =
-        if (pos == 1) {
+        // Initialisation
+        if (pos == -1) {
+            random.nextInt(1, n+1)
+        } else if (pos == 1) {
             pos + 1
         } else if (pos == n) {
             pos - 1
@@ -152,7 +162,10 @@ class RandomWithStayFox(
     private val random = kotlin.random.Random
 
     override fun next(pos: Int): Int =
-        if (pos == 1) {
+        // Initialisation
+        if (pos == -1) {
+            random.nextInt(1, n+1)
+        } else if (pos == 1) {
             if (random.nextBoolean()) {
                 pos
             } else {
