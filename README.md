@@ -4,6 +4,8 @@
 
 This project is a game theory implementation that simulates the "Fox in a Hole" game, a classic pursuit-evasion problem. The simulation models interactions between a farmer (pursuer) and a fox (evader), each employing different strategic approaches to achieve their objectives.
 
+There are n holes on a farm, and a fox hiding on the farm. We model the fox to be able to jump between adjascent holes once per night, and every day the farmer has 1 chance to catch them by choosing a hole. This is a game of imperfect information and no party has information about the other's choices or position. The time starts at t=1, so if the farmer catches the fox on the first try we have t=1.
+
 This implementation was developed as coursework to explore game theory concepts and strategy optimization in adversarial scenarios.
 
 ## Project Description
