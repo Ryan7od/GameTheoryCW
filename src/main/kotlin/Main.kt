@@ -17,7 +17,7 @@ suspend fun runMany(
         jobs.sumOf { it.await() } / num
     }
 
-suspend fun main() {
+fun main() = runBlocking {
     val n = 8
     val result = runMany(10, 10000000, n, OptimalFarmerFactory(n), RandomWithStayFoxFactory(n))
     println(result)
